@@ -1,4 +1,4 @@
-import pygame, sys, math, random
+import pygame, sys, math, random, gameAI
 from pygame.locals import *
 
 
@@ -8,6 +8,8 @@ from pygame.locals import *
 
 pygame.init()
 fpsClock = pygame.time.Clock()
+
+scoreFont = pygame.font.SysFont('Sans',17)
 
 from gameItems import *
 
@@ -24,13 +26,14 @@ windowSurfaceObj = pygame.display.set_mode((0,0))
 pygame.display.set_caption("Planet Capture")
 
 mouseX, mouseY = 0, 0
+mouseDown = False
 
 cursorBoxX, cursorBoxY = 0, 0
 
 
 
 
-players = [Player("Chris",(32,32,200)),Player("CPU1",(200,32,32)),Player("CPU2",(32,200,32)),Player("CPU3",(32,180,180))]
+players = [Player("Chris",(32,32,200),controller=Player),Player("CPU1",(200,32,32)),Player("CPU2",(32,200,32)),Player("CPU3",(32,180,180))]
 			
 
 planets = []
@@ -58,19 +61,46 @@ while True:
 		elif event.type == KEYUP:
 			pass
 		elif event.type == MOUSEMOTION:
-			mouse = pygame.mouse.get_pos()
-			mouseX = mouse[0]
-			mouseY = mouse[1]
+			event = []
+			event["mousePosition"] = pygame.event.pos()
+
+			gameAI.Player.updateInput(event)
 			
 		elif event.type == MOUSEBUTTONUP:
+			event = []
+			event["mousePosition"] = pygame.mouse.get_pos()
+			if event.button in (1,2,3):
+				event["mouseButton"] = True
+				if event.button == 1:
+					event["mouseLeft"] = True
+				else:
+					event["mouseLeft"] = False
+					
+				if event.button == 2:
+					event["mouseMiddle"] = True
+				else:
+					event["mouseMiddle"] = False
+					
+				if event.button == 3:
+					event["mouseRight"] = True
+				else:
+					event["mouseRight"] = False
+					
+			else:
+				event["mouseButton"] = False
+				
+			if event.button == 4:
+				event["scroll"] = "UP"
+			elif event.button == 5:
+				event["scroll"] = "DOWN"
+				
+			gameAI.Player.updateInput(event)
+		elif event.type == MOUSEBUTTONDOWN:
+			mouseUp = True
 			for i in range(random.randint(0,len(players))):players[0].addship(random.randint(mouseX-50,mouseX+50),random.randint(mouseY-50,mouseY+50))
 			for p in players[1:]:
 				for i in range(random.randint(0,len(players)*2)):p.addship(random.randint(50,windowSurfaceObj.get_width()-50),random.randint(50,windowSurfaceObj.get_height()-50))
 			
-			pass
-			
-		elif event.type == MOUSEBUTTONDOWN:
-			pass
 		elif event.type == JOYAXISMOTION:
 			pass
 			
@@ -81,26 +111,23 @@ while True:
 
 	for p in planets:
 		p.tick()
+	
 	for ship in players[0].ships:
 		if ship.owner == players[0]:ship._accelerateTo(mouseX, mouseY, 1000)		
+	
 	for player in players:
-		for s in player.ships:
-			for planet in planets:
-				s.accelerateTo(planet)
-			
-			s.tick(planets)
-			
-			if s.posX > windowSurfaceObj.get_width()  or s.posX < 0: s.veloX = 0
-			if s.posY > windowSurfaceObj.get_height() or s.posY < 0: s.veloY = 0
-			#s.posY = s.posY % (windowSurfaceObj.get_height())
-			
-			#s['px'] = (s['px'] + s['vx']) 
-			#s['py'] = (s['py'] + s['vy']) % (windowSurfaceObj.get_height())
-			#s['vx'] = (s['vx']+s['ax'])*0.99
-			#s['vy'] = (s['vy']+s['ay'])*0.99
-			##s['ax'] = s['ax']*-sign(s['vx'])
-			##s['ay'] = s['ay']*-sign(s['vy'])
-			#s['ang'] = math.tan(s['vy']/s['vx'])
+		#for s in player.ships:
+		#	for planet in planets:
+		#		s.accelerateTo(planet)
+		#	
+		#	s.tick(planets)
+		#	
+		#	#Edge action is to stop going off the screen and allow the planets to re-attract ships
+		#	
+		#	if s.posX > windowSurfaceObj.get_width()  or s.posX < 0: s.veloX = 0 
+		#	if s.posY > windowSurfaceObj.get_height() or s.posY < 0: s.veloY = 0
+		player.tick(planets, params={"width":windowSurfaceObj.get_width(),"height":windowSurfaceObj.get_height()})
+
 			
 			
 			
@@ -108,17 +135,27 @@ while True:
 ###      DRAW GAME SURFACE       ###
 ####################################
 
-
+	#clear the screen with black
 	windowSurfaceObj.fill((0,0,0))
-
-	for p in players:
-		for s in p.ships:
-			if s.active: pygame.draw.polygon(windowSurfaceObj,s.owner.color,s.getPoints())
-			#pygame.draw.polygon(windowSurfaceObj,players[p]["color"],((s["px"]+5*math.sin(s['ang']),s["py"]+5*math.cos(s['ang'])),(s["px"]+5*math.sin(s['ang']+math.pi/3),s["py"]+5*math.cos(s['ang']+math.pi/3)),(s["px"]+5*math.sin(s['ang']-math.pi/3),s["py"]+5*math.cos(s['ang']-math.pi/3)))) 
+	
+	#draw the ships
+	for player in players:
+		for ship in player.ships:
+			if ship.active: pygame.draw.polygon(windowSurfaceObj,ship.owner.color,ship.getPoints())
+	#draw the planets		
+	for planet in planets:
+		planet.draw(windowSurfaceObj)
 		
-	for p in planets:
-		#draw planets
-		p.draw(windowSurfaceObj)
+	#draw the scores
+	index = 0
+	for player in players:
+		name  = player.name
+		score = player.score
+		playerScoreObj = scoreFont.render("%s:%i" % (name,score),False,player.activecolor)
+		playerScoreRect = playerScoreObj.get_rect()
+		playerScoreRect.topleft = (10,10+30*index)
+		windowSurfaceObj.blit(playerScoreObj,playerScoreRect)
+		index += 1
 		
 
 	pygame.display.update()

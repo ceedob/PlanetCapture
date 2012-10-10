@@ -1,6 +1,6 @@
 import math, pygame, gameAI
 
-gravity = 100
+gravity = 10
 planetFont = pygame.font.SysFont('Sans',27)
 
 class Player(object):
@@ -10,30 +10,26 @@ class Player(object):
 	controller = gameAI.controller()
 	name = "Player"
 	
-	def __init__(self,name = "Player", color = (32,32,32), controller = gameAI.Random()):
+	def __init__(self,name = "Player", color = (32,32,32), controller = gameAI.RandomAI()):
 		self.name = name
 		self.color = color
 		self.activecolor = (color[0]/2+128,color[1]/2+128,color[2]/2+128)
 		self.score = 0
-		self.controller = controller
+		self.controller = controller	
 		
 	def addship(self, x, y):
 		self.ships.append(Ship(self,x,y))
+	
 		
 	def tick(self, universe, params = {}):
-		for s in self.ships:
-			for planet in universe:
-				s.accelerateTo(planet)
-			
-			s.tick(universe)
-			
-			#Edge action is to stop going off the screen and allow the planets to re-attract ships
-			
-			if s.posX > params["width"]  or s.posX < 0: s.veloX = 0 
-			if s.posY > params["height"] or s.posY < 0: s.veloY = 0
+		self.controller.tick(self,universe,params)
+		
+		#Edge action is to stop going off the screen and allow the planets to re-attract ships
+		for ship in self.ships:
+			if ship.posX > params["width"]  or ship.posX < 0: ship.veloX = 0 
+			if ship.posY > params["height"] or ship.posY < 0: ship.veloY = 0
 
-	
-	
+		
 		shipIndex = 0
 		while shipIndex <= len(self.ships)-1:
 			if self.ships[shipIndex].active == False:
@@ -46,6 +42,32 @@ class Player(object):
 		for planet in universe: 
 			if planet.owner.name == self.name:
 				self.score += planet.ships
+	
+# 		for s in self.ships:
+# 			for planet in universe:
+# 				s.accelerateTo(planet)
+# 			
+# 			s.tick(universe)
+# 			
+# 			#Edge action is to stop going off the screen and allow the planets to re-attract ships
+# 			
+# 			if s.posX > params["width"]  or s.posX < 0: s.veloX = 0 
+# 			if s.posY > params["height"] or s.posY < 0: s.veloY = 0
+# 
+# 	
+# 	
+# 		shipIndex = 0
+# 		while shipIndex <= len(self.ships)-1:
+# 			if self.ships[shipIndex].active == False:
+# 				del(self.ships[shipIndex])
+# 				shipIndex = 0
+# 			else:
+# 				shipIndex += 1
+# 		
+# 		self.score = len(self.ships)
+# 		for planet in universe: 
+# 			if planet.owner.name == self.name:
+# 				self.score += planet.ships
 	
 
 class Planet(object):

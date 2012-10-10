@@ -1,4 +1,4 @@
-import pygame, sys, math, random, gameAI
+import pygame, sys, math, random
 from pygame.locals import *
 
 
@@ -11,7 +11,8 @@ fpsClock = pygame.time.Clock()
 
 scoreFont = pygame.font.SysFont('Sans',17)
 
-from gameItems import *
+from gameItems 	import *
+from gameAI		import *
 
 def sign(n):
 	if n < 0:
@@ -25,15 +26,13 @@ def sign(n):
 windowSurfaceObj = pygame.display.set_mode((0,0))
 pygame.display.set_caption("Planet Capture")
 
-mouseX, mouseY = 0, 0
-mouseDown = False
 
 cursorBoxX, cursorBoxY = 0, 0
 
 
 
 
-players = [Player("Chris",(32,32,200),controller=Player),Player("CPU1",(200,32,32)),Player("CPU2",(32,200,32)),Player("CPU3",(32,180,180))]
+players = [Player("Chris",(32,32,200),controller=gameAI.Human),Player("CPU1",(200,32,32)),Player("CPU2",(32,200,32)),Player("CPU3",(32,180,180))]
 			
 
 planets = []
@@ -56,53 +55,45 @@ while True:
 		if   event.type == QUIT:
 			pygame.quit()
 			sys.exit()
-		elif event.type == KEYDOWN:
-			pass
-		elif event.type == KEYUP:
-			pass
-		elif event.type == MOUSEMOTION:
-			event = []
-			event["mousePosition"] = pygame.event.pos()
-
-			gameAI.Player.updateInput(event)
 			
-		elif event.type == MOUSEBUTTONUP:
-			event = []
-			event["mousePosition"] = pygame.mouse.get_pos()
-			if event.button in (1,2,3):
-				event["mouseButton"] = True
-				if event.button == 1:
-					event["mouseLeft"] = True
-				else:
-					event["mouseLeft"] = False
-					
-				if event.button == 2:
-					event["mouseMiddle"] = True
-				else:
-					event["mouseMiddle"] = False
-					
-				if event.button == 3:
-					event["mouseRight"] = True
-				else:
-					event["mouseRight"] = False
-					
-			else:
-				event["mouseButton"] = False
-				
-			if event.button == 4:
-				event["scroll"] = "UP"
-			elif event.button == 5:
-				event["scroll"] = "DOWN"
-				
-			gameAI.Player.updateInput(event)
-		elif event.type == MOUSEBUTTONDOWN:
-			mouseUp = True
-			for i in range(random.randint(0,len(players))):players[0].addship(random.randint(mouseX-50,mouseX+50),random.randint(mouseY-50,mouseY+50))
-			for p in players[1:]:
-				for i in range(random.randint(0,len(players)*2)):p.addship(random.randint(50,windowSurfaceObj.get_width()-50),random.randint(50,windowSurfaceObj.get_height()-50))
-			
-		elif event.type == JOYAXISMOTION:
-			pass
+		else:
+			Human.runEvent(event)
+			if event.type == MOUSEBUTTONUP:
+				for i in range(random.randint(1,len(players))):players[0].addship(random.randint(Human.mouseX-50,Human.mouseX+50),random.randint(Human.mouseY-50,Human.mouseY+50)) 			
+				for p in players[1:]:
+ 					for i in range(random.randint(1,len(players)*2)):p.addship(random.randint(50,windowSurfaceObj.get_width()-50),random.randint(50,windowSurfaceObj.get_height()-50))
+# 		elif event.type == KEYDOWN:
+# 			pass
+# 		elif event.type == KEYUP:
+# 			pass
+# 		elif event.type == MOUSEMOTION:
+# 			inputEvent = {}
+# 			inputEvent["mousePosition"] = event.pos
+# 
+# 			Human.updateInput(inputEvent)
+# 			
+# 		elif event.type == MOUSEBUTTONUP:
+# 			eventdata = {}
+# 			eventdata["mousePosition"] = pygame.mouse.get_pos()
+# 			if event.button in (1,2,3):
+# 				eventdata["mouseButton"] = True					
+# 				
+# 			Human.updateInput(eventdata)
+# 			
+# 		elif event.type == MOUSEBUTTONDOWN:
+# 			eventdata = {}
+# 			eventdata["mousePosition"] = pygame.mouse.get_pos()
+# 			if event.button in (1,2,3):
+# 				eventdata["mouseButton"] = True					
+# 				
+# 			Human.updateInput(eventdata)
+# 			
+# 			for i in range(random.randint(0,len(players))):players[0].addship(random.randint(mouseX-50,mouseX+50),random.randint(mouseY-50,mouseY+50))
+# 			for p in players[1:]:
+# 				for i in range(random.randint(0,len(players)*2)):p.addship(random.randint(50,windowSurfaceObj.get_width()-50),random.randint(50,windowSurfaceObj.get_height()-50))
+# 			
+# 		elif event.type == JOYAXISMOTION:
+# 			pass
 			
 
 ####################################
@@ -112,8 +103,8 @@ while True:
 	for p in planets:
 		p.tick()
 	
-	for ship in players[0].ships:
-		if ship.owner == players[0]:ship._accelerateTo(mouseX, mouseY, 1000)		
+	#for ship in players[0].ships:
+		#if ship.owner == players[0]:ship._accelerateTo(Human.mouseX, Human.mouseY, 1000)		
 	
 	for player in players:
 		#for s in player.ships:

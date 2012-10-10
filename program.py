@@ -30,7 +30,7 @@ cursorBoxX, cursorBoxY = 0, 0
 
 
 
-players = [Player("Chris",(0,0,255)),Player("AI1",(255,0,0)),Player("CPU",(0,255,0))]
+players = [Player("Chris",(32,32,200)),Player("CPU1",(200,32,32)),Player("CPU2",(32,200,32)),Player("CPU3",(32,180,180))]
 			
 
 planets = []
@@ -56,9 +56,6 @@ while True:
 		elif event.type == KEYDOWN:
 			pass
 		elif event.type == KEYUP:
-			players[0].addship(random.randint(50,windowSurfaceObj.get_width()-50),random.randint(50,windowSurfaceObj.get_height()-50))
-			players[1].addship(random.randint(50,windowSurfaceObj.get_width()-50),random.randint(50,windowSurfaceObj.get_height()-50))
-			players[2].addship(random.randint(50,windowSurfaceObj.get_width()-50),random.randint(50,windowSurfaceObj.get_height()-50))
 			pass
 		elif event.type == MOUSEMOTION:
 			mouse = pygame.mouse.get_pos()
@@ -66,6 +63,10 @@ while True:
 			mouseY = mouse[1]
 			
 		elif event.type == MOUSEBUTTONUP:
+			for i in range(random.randint(0,len(players))):players[0].addship(random.randint(mouseX-50,mouseX+50),random.randint(mouseY-50,mouseY+50))
+			for p in players[1:]:
+				for i in range(random.randint(0,len(players)*2)):p.addship(random.randint(50,windowSurfaceObj.get_width()-50),random.randint(50,windowSurfaceObj.get_height()-50))
+			
 			pass
 			
 		elif event.type == MOUSEBUTTONDOWN:
